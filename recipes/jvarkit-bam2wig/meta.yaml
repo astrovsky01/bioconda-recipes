@@ -1,0 +1,26 @@
+package:
+  name: jvarkit-bam2wig
+  version: "1.0"
+
+source:
+  git_url: https://github.com/lindenb/jvarkit.git
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - openjdk >=11
+#    - cmake
+   
+  run:
+    - openjdk >=11
+
+test:
+  commands:
+    - bam2wig.sh -h
+
+about:
+  home: http://lindenb.github.io/jvarkit/Sam2Tsv.html
+  license: MIT
+  summary: Prints the SAM alignments as a TAB delimited file.
