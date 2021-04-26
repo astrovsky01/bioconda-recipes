@@ -4,8 +4,8 @@ export C_INCLUDE_PATH=${PREFIX}/include
 export LIBRARY_PATH=${PREFIX}/lib
 export LD_LIBRARY_PATH="${PREFIX}/lib"
 
-export CFLAGS="$CFLAGS -I$PREFIX/include -g -Wall"
-export LDFLAGS="$LDFLAGS -L$PREFIX/lib -lz -lm"
+export CFLAGS="$CFLAGS -L$BUILD_PREFIX/lib -L$PREFIX/lib -I$SRC_DIR/VGP/HTSLIB -I$SRC_DIR/VGP/LIBDEFLATE -I$BUILD_PREFIX/include -I$PREFIX/include -g -Wall"
+export LDFLAGS="$LDFLAGS -L$BUILD_PREFIX/lib -L$PREFIX/lib -lz -lm"
 
 export CPATH=${PREFIX}/include
 

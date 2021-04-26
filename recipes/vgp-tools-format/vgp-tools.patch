@@ -1,100 +1,83 @@
+diff --git a/VGP/HTSLIB/Makefile b/VGP/HTSLIB/Makefile
+index 45e3683..69a4580 100755
+--- a/VGP/HTSLIB/Makefile
++++ b/VGP/HTSLIB/Makefile
+@@ -22,9 +22,9 @@
+ # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ # DEALINGS IN THE SOFTWARE.
+ 
+-CC     = gcc
+-AR     = ar
+-RANLIB = ranlib
++CC     ?= gcc
++AR     ?= ar
++RANLIB ?= ranlib
+ 
+ # Default libraries to link if configure is not used
+ htslib_default_libs = -lz -lm -lbz2 -llzma -lcurl
+@@ -35,9 +35,9 @@ CPPFLAGS =
+ # TODO: probably update cram code to make it compile cleanly with -Wc++-compat
+ # For testing strict C99 support add -std=c99 -D_XOPEN_SOURCE=600
+ #CFLAGS   = -g -Wall -O2 -pedantic -std=c99 -D_XOPEN_SOURCE=600
+-CFLAGS   = -g -Wall -O2 -fvisibility=hidden
++CFLAGS   += -g -Wall -O2 -fvisibility=hidden
+ EXTRA_CFLAGS_PIC = -fpic
+-LDFLAGS  = -fvisibility=hidden
++LDFLAGS  += -fvisibility=hidden
+ LIBS     = $(htslib_default_libs)
+ 
+ prefix      = /usr/local
 diff --git a/VGP/Makefile b/VGP/Makefile
-index 87a5f7e..93850a5 100644
+index 87a5f7e..6b18b4c 100644
 --- a/VGP/Makefile
 +++ b/VGP/Makefile
-@@ -1,45 +1,39 @@
+@@ -1,6 +1,6 @@
  DEST_DIR = ~/bin
  
 -CFLAGS = -O3 -Wall -Wextra -Wno-unused-result -fno-strict-aliasing -DNDEBUG
-+CFLAGS = -O3 -Wall -Wextra -Wno-unused-result -fno-strict-aliasing -DNDEBUG -I${BUILD_PREFIX}/include
++CFLAGS += -O3 -Wall -Wextra -Wno-unused-result -fno-strict-aliasing -DNDEBUG
  
  ALL = VGPzip VGPseq VGPpair VGPpacbio VGPcloud Dazz2pbr Dazz2sxs
  
--all: deflate.lib libhts.a $(ALL)
-+LDFLAGS = -L${BUILD_PREFIX}/lib ${LDFLAGS}
-+
-+all: $(ALL)
- 
- ONE_LIB = ../Core/ONElib.c
- ONE_DPND = $(ONE_LIB) ../Core/ONElib.h VGPschema.h
- 
--GENE_CORE = gene_core.c LIBDEFLATE/libdeflate.a
-+GENE_CORE = $(LDFLAGS) gene_core.c -ldeflate
+@@ -12,6 +12,8 @@ ONE_DPND = $(ONE_LIB) ../Core/ONElib.h VGPschema.h
+ GENE_CORE = gene_core.c LIBDEFLATE/libdeflate.a
  GENE_DPND = $(GENE_CORE) gene_core.h
  
--include HTSLIB/htslib_static.mk
--
--deflate.lib: LIBDEFLATE
--	cd LIBDEFLATE; make; cd ..
--
--libhts.a: HTSLIB
--	cd HTSLIB; make; cd ..
--
--VGPzip: VGPzip.c $(GENE_DPND)
++CC ?= gcc
++
+ include HTSLIB/htslib_static.mk
+ 
+ deflate.lib: LIBDEFLATE
+@@ -21,25 +23,25 @@ libhts.a: HTSLIB
+ 	cd HTSLIB; make; cd ..
+ 
+ VGPzip: VGPzip.c $(GENE_DPND)
 -	gcc $(CFLAGS) -o VGPzip VGPzip.c $(GENE_CORE) -lpthread
-+VGPzip: VGPzip.c gene_core.c gene_core.h
-+	${CC} $(CFLAGS) -o VGPzip VGPzip.c $(GENE_CORE) -lpthread
++	$(CC) $(CFLAGS) -o VGPzip VGPzip.c $(GENE_CORE) -lpthread
  
--VGPseq: VGPseq.c $(ONE_DPND) $(GENE_DPND) HTSLIB/libhts.a
+ VGPseq: VGPseq.c $(ONE_DPND) $(GENE_DPND) HTSLIB/libhts.a
 -	gcc $(CFLAGS) -o VGPseq -I./HTSLIB $(HTSLIB_static_LDFLAGS) VGPseq.c $(ONE_LIB) $(GENE_CORE) HTSLIB/libhts.a -lpthread $(HTSLIB_static_LIBS)
-+VGPseq: VGPseq.c $(ONE_DPND) gene_core.c gene_core.h
-+	${CC} $(CFLAGS) -o VGPseq $(LDFLAGS) VGPseq.c $(ONE_LIB) $(GENE_CORE) -lhts -lpthread
++	$(CC) $(CFLAGS) -o VGPseq -I./HTSLIB $(HTSLIB_static_LDFLAGS) VGPseq.c $(ONE_LIB) $(GENE_CORE) HTSLIB/libhts.a -lpthread $(HTSLIB_static_LIBS)
  
--VGPpair: VGPpair.c $(ONE_DPND) $(GENE_DPND)
+ VGPpair: VGPpair.c $(ONE_DPND) $(GENE_DPND)
 -	gcc $(CFLAGS) -o VGPpair VGPpair.c $(ONE_LIB) $(GENE_CORE) -lpthread
-+VGPpair: VGPpair.c $(ONE_DPND) gene_core.c gene_core.h
-+	${CC} $(CFLAGS) -o VGPpair VGPpair.c $(ONE_LIB) $(GENE_CORE) -lpthread
++	$(CC) $(CFLAGS) -o VGPpair VGPpair.c $(ONE_LIB) $(GENE_CORE) -lpthread
  
--VGPpacbio: VGPpacbio.c pb_expr.c pb_expr.h $(ONE_DPND) $(GENE_DPND)
+ VGPpacbio: VGPpacbio.c pb_expr.c pb_expr.h $(ONE_DPND) $(GENE_DPND)
 -	gcc $(CFLAGS) -o VGPpacbio VGPpacbio.c pb_expr.c $(ONE_LIB) $(GENE_CORE) -lpthread
-+VGPpacbio: VGPpacbio.c pb_expr.c pb_expr.h $(ONE_DPND) gene_core.c gene_core.h
-+	${CC} $(CFLAGS) -o VGPpacbio VGPpacbio.c pb_expr.c $(ONE_LIB) $(GENE_CORE) -lpthread
++	$(CC) $(CFLAGS) -o VGPpacbio VGPpacbio.c pb_expr.c $(ONE_LIB) $(GENE_CORE) -lpthread
  
--VGPcloud: VGPcloud.c msd.sort.c msd.sort.h $(ONE_DPND) $(GENE_DPND)
+ VGPcloud: VGPcloud.c msd.sort.c msd.sort.h $(ONE_DPND) $(GENE_DPND)
 -	gcc $(CFLAGS) -o VGPcloud VGPcloud.c msd.sort.c $(ONE_LIB) $(GENE_CORE) -lpthread
-+VGPcloud: VGPcloud.c msd.sort.c msd.sort.h $(ONE_DPND) gene_core.c gene_core.h
-+	${CC} $(CFLAGS) -o VGPcloud VGPcloud.c msd.sort.c $(ONE_LIB) $(GENE_CORE) -lpthread
++	$(CC) $(CFLAGS) -o VGPcloud VGPcloud.c msd.sort.c $(ONE_LIB) $(GENE_CORE) -lpthread
  
--Dazz2pbr: Dazz2pbr.c $(ONE_DPND) $(GENE_DPND)
+ Dazz2pbr: Dazz2pbr.c $(ONE_DPND) $(GENE_DPND)
 -	gcc $(CFLAGS) -o Dazz2pbr Dazz2pbr.c $(ONE_LIB) $(GENE_CORE) -lpthread
-+Dazz2pbr: Dazz2pbr.c $(ONE_DPND) gene_core.c gene_core.h
-+	${CC} $(CFLAGS) -o Dazz2pbr Dazz2pbr.c $(ONE_LIB) $(GENE_CORE) -lpthread
++	$(CC) $(CFLAGS) -o Dazz2pbr Dazz2pbr.c $(ONE_LIB) $(GENE_CORE) -lpthread
  
--Dazz2sxs: Dazz2sxs.c $(ONE_DPND) $(GENE_DPND)
+ Dazz2sxs: Dazz2sxs.c $(ONE_DPND) $(GENE_DPND)
 -	gcc $(CFLAGS) -o Dazz2sxs Dazz2sxs.c $(ONE_LIB) $(GENE_CORE) -lpthread
-+Dazz2sxs: Dazz2sxs.c $(ONE_DPND) gene_core.c gene_core.h
-+	${CC} $(CFLAGS) -o Dazz2sxs Dazz2sxs.c $(ONE_LIB) $(GENE_CORE) -lpthread
++	$(CC) $(CFLAGS) -o Dazz2sxs Dazz2sxs.c $(ONE_LIB) $(GENE_CORE) -lpthread
  
  tidyup:
  	rm -f $(ALL)
-@@ -47,8 +41,6 @@ tidyup:
- 	rm -f VGPtools.tar.gz
- 
- clean:
--	cd LIBDEFLATE; make clean; cd ..
--	cd HTSLIB; make clean; cd ..
- 	rm -f $(ALL)
- 	rm -fr *.dSYM
- 	rm -f VGPtools.tar.gz
-@@ -58,4 +50,3 @@ install:
- 
- package:
- 	make clean
--	tar -zcf VGPtools.tar.gz Makefile *.h *.c LIBDEFLATE HTSLIB
-diff --git a/VGP/VGPseq.c b/VGP/VGPseq.c
-index ae25fab..0b7d83a 100644
---- a/VGP/VGPseq.c
-+++ b/VGP/VGPseq.c
-@@ -28,9 +28,9 @@
- #include "gene_core.h"
- #include "../Core/ONElib.h"
- #include "LIBDEFLATE/libdeflate.h"
--#include "HTSLIB/htslib/hts.h"
--#include "HTSLIB/htslib/hfile.h"
--#include "HTSLIB/cram/cram.h"
-+#include "htslib/hts.h"
-+#include "htslib/hfile.h"
-+#include "cram/cram.h"
- 
- #undef    DEBUG_FIND
- #undef    DEBUG_OUT
